@@ -145,7 +145,7 @@ void AP_Mission::resume()
         set_current_cmd(_nav_cmd.index);
     }
 
-    // Note: if there is no active command then the mission must have been stopped just after the previous nav command completed
+     // Note: if there is no active command then the mission must have been stopped just after the previous nav command completed
     //      update will take care of finding and starting the nav command
 }
 
@@ -284,7 +284,7 @@ void AP_Mission::update()
         }
     } else {
         // run the active nav command
-        if (verify_command(_nav_cmd)) {
+        if (verify_command(_nav_cmd)) { 
             // market _nav_cmd as complete (it will be started on the next iteration)
             _flags.nav_cmd_loaded = false;
             // immediately advance to the next mission command
@@ -382,6 +382,7 @@ bool AP_Mission::add_cmd(Mission_Command& cmd)
     if (ret) {
         // update command's index
         cmd.index = _cmd_total;
+        hal.console->printf("%s:%d _cmd_total:%d\n", __FILE__, __LINE__, _cmd_total.get());
         // increment total number of commands
         _cmd_total.set_and_save(_cmd_total + 1);
     }
@@ -1688,6 +1689,11 @@ bool AP_Mission::mission_cmd_to_mavlink_int(const AP_Mission::Mission_Command& c
 /// complete - mission is marked complete and clean-up performed including calling the mission_complete_fn
 void AP_Mission::complete()
 {
+    if(_flags.state == MISSION_STOPPED)
+    {
+        return;
+    }
+
     // flag mission as complete
     _flags.state = MISSION_COMPLETE;
     _flags.in_landing_sequence = false;

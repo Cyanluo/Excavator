@@ -5,6 +5,7 @@
 
 bool ModeAuto::_enter()
 {
+    hal.console->printf("%s:%d bool ModeAuto::_enter()\n", __FILE__, __LINE__);
     // fail to enter auto if no mission commands
     if (mission.num_commands() <= 1) {
         gcs().send_text(MAV_SEVERITY_NOTICE, "No Mission. Can't set AUTO.");
@@ -29,8 +30,15 @@ bool ModeAuto::_enter()
         start_stop();
     }
 
+    hal.console->printf("%s:%d nav_cmd:%d\n", __FILE__, __LINE__, mission.get_current_nav_cmd().index);
+
     // set flag to start mission
     waiting_to_start = true;
+    hal.console->printf("%s:%d waiting_to_start = true\n", __FILE__, __LINE__);
+
+    do_state = false;
+
+    do_start_time = 0;
 
     return true;
 }
@@ -45,6 +53,8 @@ void ModeAuto::_exit()
 
 void ModeAuto::update()
 {
+    static bool ptF = false;
+
     // start or update mission
     if (waiting_to_start) {
         // don't start the mission until we have an origin
@@ -52,9 +62,21 @@ void ModeAuto::update()
         if (ahrs.get_origin(loc)) {
             // start/resume the mission (based on MIS_RESTART parameter)
             mission.start_or_resume();
+
+            hal.console->printf("%s:%d void ModeAuto::update()\n", __FILE__, __LINE__);            
+            hal.console->printf("%s:%d mission.start_or_resume()\n", __FILE__, __LINE__);
+
             waiting_to_start = false;
+
+            ptF = true;
         }
     } else {
+        if(ptF)
+        {
+            hal.console->printf("%s:%d mission.update()\n", __FILE__, __LINE__);    
+            ptF = false;        
+        }
+        
         mission.update();
     }
 
@@ -123,6 +145,10 @@ void ModeAuto::update()
         case Auto_NavScriptTime:
             rover.mode_guided.update();
             break;
+
+        case DO_SOMETHING:
+            do_something();
+            break;
     }
 }
 
@@ -144,6 +170,7 @@ float ModeAuto::get_distance_to_destination() const
         return _distance_to_destination;
     case Auto_HeadingAndSpeed:
     case Auto_Stop:
+    case DO_SOMETHING:
         // no valid distance so return zero
         return 0.0f;
     case Auto_RTL:
@@ -171,6 +198,7 @@ bool ModeAuto::get_desired_location(Location& destination) const
         return false;
     case Auto_HeadingAndSpeed:
     case Auto_Stop:
+    case DO_SOMETHING:
         // no desired location for this submode
         return false;
     case Auto_RTL:
@@ -208,6 +236,7 @@ bool ModeAuto::reached_destination() const
         break;
     case Auto_HeadingAndSpeed:
     case Auto_Stop:
+    case DO_SOMETHING:
         // always return true because this is the safer option to allow missions to continue
         return true;
         break;
@@ -233,6 +262,7 @@ bool ModeAuto::set_desired_speed(float speed)
     switch (_submode) {
     case Auto_WP:
     case Auto_Stop:
+    case DO_SOMETHING:
         if (!is_negative(speed)) {
             g2.wp_nav.set_desired_speed(speed);
             return true;
@@ -398,7 +428,7 @@ bool ModeAuto::start_command(const AP_Mission::Mission_Command& cmd)
 
     switch (cmd.id) {
     case MAV_CMD_NAV_WAYPOINT:  // Navigate to Waypoint
-        return do_nav_wp(cmd, false);
+        return do_nav_wp(cmd, true);
 
     case MAV_CMD_NAV_RETURN_TO_LAUNCH:
         do_RTL();
@@ -683,6 +713,38 @@ void ModeAuto::do_nav_set_yaw_speed(const AP_Mission::Mission_Command& cmd)
     _submode = Auto_HeadingAndSpeed;
 }
 
+void ModeAuto::start_do_something()
+{
+    _submode = DO_SOMETHING;
+    stop_vehicle();
+}
+
+bool ModeAuto::finish_do_something()
+{
+    return do_state;
+}
+
+void ModeAuto::do_something()
+{
+    do_state = false;
+
+    if(do_start_time == 0)
+    {
+        do_start_time = millis();
+    }
+
+    hal.console->printf("do ");
+ 
+    if(millis() - do_start_time > 4200)
+    {
+        hal.console->print("\n");
+        do_state = true;
+        hal.console->printf("finish do something\n");
+
+        do_start_time = 0;
+    }
+}
+
 /********************************************************************************/
 //  Verify Nav (Must) commands
 /********************************************************************************/
@@ -691,6 +753,11 @@ bool ModeAuto::verify_nav_wp(const AP_Mission::Mission_Command& cmd)
     // exit immediately if we haven't reached the destination
     if (!reached_destination()) {
         return false;
+    }
+
+    if(!rover.mode_tbm.finish_do_something())
+    {  
+        rover.set_mode(rover.mode_tbm, ModeReason::GCS_COMMAND);
     }
 
     // Check if this is the first time we have noticed reaching the waypoint

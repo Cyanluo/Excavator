@@ -49,7 +49,6 @@ void ModeGuided::update()
             }
             break;
         }
-
         case Guided_HeadingAndSpeed:
         {
             // stop vehicle if target not updated within 3 seconds

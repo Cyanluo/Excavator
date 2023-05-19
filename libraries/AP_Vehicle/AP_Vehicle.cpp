@@ -99,7 +99,14 @@ void AP_Vehicle::setup()
                         AP::fwversion().fw_string,
                         (unsigned)hal.util->available_memory());
 
+    gcs().init();
+
+    // initialise serial ports
+    serial_manager.init();
+    gcs().setup_console();
+    
     load_parameters();
+    
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_CHIBIOS
     if (AP_BoardConfig::get_sdcard_slowdown() != 0) {
@@ -129,11 +136,11 @@ void AP_Vehicle::setup()
     // diagnostic output during boot process.  We have to initialise
     // the GCS singleton first as it sets the global mavlink system ID
     // which may get used very early on.
-    gcs().init();
+    // gcs().init();
 
-    // initialise serial ports
-    serial_manager.init();
-    gcs().setup_console();
+    // // initialise serial ports
+    // serial_manager.init();
+    // gcs().setup_console();
 
     // Register scheduler_delay_cb, which will run anytime you have
     // more than 5ms remaining in your call to hal.scheduler->delay

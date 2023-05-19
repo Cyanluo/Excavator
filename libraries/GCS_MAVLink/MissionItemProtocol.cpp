@@ -2,6 +2,8 @@
 
 #include "GCS.h"
 
+extern const AP_HAL::HAL& hal;
+
 void MissionItemProtocol::init_send_requests(GCS_MAVLINK &_link,
                                              const mavlink_message_t &msg,
                                              const int16_t _request_first,
@@ -203,7 +205,7 @@ void MissionItemProtocol::handle_mission_write_partial_list(GCS_MAVLINK &_link,
         return;
     }
 
-    MAV_MISSION_RESULT ret_alloc = allocate_update_resources();
+   MAV_MISSION_RESULT ret_alloc = allocate_update_resources();
     if (ret_alloc != MAV_MISSION_ACCEPTED) {
         send_mission_ack(_link, msg, ret_alloc);
         return;
@@ -242,6 +244,7 @@ void MissionItemProtocol::handle_mission_item(const mavlink_message_t &msg, cons
         result = replace_item(cmd);
     } else if (cmd.seq == _item_count) {
         // command is at the end of command list, add the command
+        hal.console->printf("%s:%d result = append_item(cmd);\n", __FILE__, __LINE__);
         result = append_item(cmd);
     } else {
         // beyond the end of the command list, return an error

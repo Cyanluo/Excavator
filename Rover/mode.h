@@ -30,7 +30,8 @@ public:
         RTL          = 11,
         SMART_RTL    = 12,
         GUIDED       = 15,
-        INITIALISING = 16
+        INITIALISING = 16,
+        TBM          = 17
     };
 
     // Constructor
@@ -239,6 +240,34 @@ public:
     void handle_tack_request() override;
 };
 
+class ModeTBM : public Mode
+{
+public:
+
+    uint32_t mode_number() const override { return TBM; }
+    const char *name4() const override { return "TBM"; }
+
+    // methods that affect movement of the vehicle in this mode
+    void update() override;
+    bool finish_do_something();
+
+protected:
+    bool _enter() override;
+    void _exit() override;
+
+    uint32_t _submode;
+    bool do_state;
+    uint32_t do_start_time;
+
+    enum TBM_STATUS {
+        RUNNING = 1,
+        FINISH = 2
+    };
+
+    enum DigSubMode {
+
+    };
+};
 
 class ModeAuto : public Mode
 {
@@ -300,9 +329,15 @@ protected:
         Auto_Guided,            // handover control to external navigation system from within auto mode
         Auto_Stop,              // stop the vehicle as quickly as possible
         Auto_NavScriptTime,     // accept targets from lua scripts while NAV_SCRIPT_TIME commands are executing
+        DO_SOMETHING,
     } _submode;
 
 private:
+    void start_do_something();
+    bool finish_do_something();
+    void do_something();
+    bool do_state;
+    uint32_t do_start_time;
 
     bool check_trigger(void);
     bool start_loiter();

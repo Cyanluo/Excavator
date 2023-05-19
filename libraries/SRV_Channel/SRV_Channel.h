@@ -607,7 +607,7 @@ private:
     // mask of outputs which use a digital output protocol, not
     // PWM (eg. DShot)
     static uint16_t digital_mask;
-    
+
     // mask of outputs which are digitally reversible (eg. DShot-3D)
     static uint16_t reversible_mask;
 

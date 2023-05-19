@@ -611,6 +611,9 @@ void GCS_MAVLINK::handle_mission_count(const mavlink_message_t &msg)
         return;
     }
 
+    hal.console->printf("%s:%d handle_mission_count(const mavlink_message_t &msg)\n", __FILE__, __LINE__);
+    hal.console->printf("count:%d\n", packet.count);
+
     prot->handle_mission_count(*this, packet, msg);
 }
 
@@ -3745,6 +3748,7 @@ void GCS_MAVLINK::handle_common_mission_message(const mavlink_message_t &msg)
     // GCS has sent us a mission item, store to EEPROM
     case MAVLINK_MSG_ID_MISSION_ITEM:           // MAV ID: 39
     case MAVLINK_MSG_ID_MISSION_ITEM_INT:
+        hal.console->printf("%s:%d case MAVLINK_MSG_ID_MISSION_ITEM_INT:\n", __FILE__, __LINE__);
         handle_mission_item(msg);
         break;
 
@@ -4480,6 +4484,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t 
         break;
 
     case MAV_CMD_COMPONENT_ARM_DISARM:
+        hal.console->printf("%s:%d case MAV_CMD_COMPONENT_ARM_DISARM\n", __FILE__, __LINE__);
         result = handle_command_component_arm_disarm(packet);
         break;
 

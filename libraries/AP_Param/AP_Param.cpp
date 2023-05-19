@@ -614,6 +614,9 @@ const struct AP_Param::Info *AP_Param::find_var_info(uint32_t *                 
                 return info2;
             }
         } else if (base == (ptrdiff_t) this) {
+            
+            gcs().send_text(MAV_SEVERITY_INFO, "find_var_info:this:%p\n", this);
+            
             *group_element = 0;
             *idx = 0;
             return &info;

@@ -23,6 +23,8 @@
 
 #include "GCS.h"
 
+extern const AP_HAL::HAL& hal;
+
 MAV_MISSION_RESULT MissionItemProtocol_Waypoints::append_item(const mavlink_mission_item_int_t &mission_item_int)
 {
     // sanity check for DO_JUMP command
@@ -40,6 +42,7 @@ MAV_MISSION_RESULT MissionItemProtocol_Waypoints::append_item(const mavlink_miss
     }
 
     if (!mission.add_cmd(cmd)) {
+        hal.console->printf("%s:%d mission.add_cmd(cmd)\n", __FILE__, __LINE__);
         return MAV_MISSION_ERROR;
     }
     return MAV_MISSION_ACCEPTED;

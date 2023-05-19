@@ -644,6 +644,7 @@ MAV_RESULT GCS_MAVLINK_Rover::handle_command_long_packet(const mavlink_command_l
         return MAV_RESULT_FAILED;
 
     case MAV_CMD_MISSION_START:
+        hal.console->printf("%s:%d case MAV_CMD_MISSION_START:\n", __FILE__, __LINE__);
         if (rover.set_mode(rover.mode_auto, ModeReason::GCS_COMMAND)) {
             return MAV_RESULT_ACCEPTED;
         }
